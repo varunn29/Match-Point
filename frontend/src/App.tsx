@@ -1,23 +1,25 @@
-import { useState } from "react";
+import { Route, Routes } from "react-router-dom";
+import { BetSlipProvider } from "./context/BetSlipContext";
+import MainLayout from "./layouts/MainLayout";
+import Home from "./pages/Home";
+import Live from "./pages/Live";
+import MatchDetails from "./pages/MatchDetails";
+import MyBets from "./pages/MyBets";
+import Wallet from "./pages/Wallet";
 
 function App() {
-    const [status, setStatus] = useState("");
-
-    async function checkBackend() {
-        const response = await fetch("http://localhost:5000/api/health");
-        const data = await response.json();
-
-        setStatus(data.status);
-    }
-
     return (
-        <div>
-            <button onClick={checkBackend}>
-                Check Backend
-            </button>
-
-            <p>Backend status: {status}</p>
-        </div>
+        <BetSlipProvider>
+            <Routes>
+                <Route element={<MainLayout />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/live" element={<Live />} />
+                    <Route path="/matches/:matchId" element={<MatchDetails />} />
+                    <Route path="/my-bets" element={<MyBets />} />
+                    <Route path="/wallet" element={<Wallet />} />
+                </Route>
+            </Routes>
+        </BetSlipProvider>
     );
 }
 
