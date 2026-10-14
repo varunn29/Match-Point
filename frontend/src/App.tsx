@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { BetSlipProvider } from "./context/BetSlipContext";
+import { FilterProvider } from "./context/FilterContext";
 import MainLayout from "./layouts/MainLayout";
 import Home from "./pages/Home";
 import Live from "./pages/Live";
@@ -10,15 +11,17 @@ import Wallet from "./pages/Wallet";
 function App() {
     return (
         <BetSlipProvider>
-            <Routes>
-                <Route element={<MainLayout />}>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/live" element={<Live />} />
-                    <Route path="/matches/:matchId" element={<MatchDetails />} />
-                    <Route path="/my-bets" element={<MyBets />} />
-                    <Route path="/wallet" element={<Wallet />} />
-                </Route>
-            </Routes>
+            <FilterProvider>
+                <Routes>
+                    <Route element={<MainLayout />}>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/live" element={<Live />} />
+                        <Route path="/matches/:matchId" element={<MatchDetails />} />
+                        <Route path="/my-bets" element={<MyBets />} />
+                        <Route path="/wallet" element={<Wallet />} />
+                    </Route>
+                </Routes>
+            </FilterProvider>
         </BetSlipProvider>
     );
 }

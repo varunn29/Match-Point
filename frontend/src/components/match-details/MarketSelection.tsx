@@ -5,6 +5,7 @@ type MarketSelectionProps = {
     selectionId: number;
     matchId: number;
     matchName: string;
+    market: string;
     label: string;
     odds: number;
 };
@@ -13,10 +14,16 @@ function MarketSelection({
     selectionId,
     matchId,
     matchName,
+    market,
     label,
-    odds
+    odds,
 }: MarketSelectionProps) {
     const context = useContext(BetSlipContext);
+
+    const isSelected =
+        context?.selections.some(function (selection) {
+            return selection.selectionId === selectionId;
+        }) ?? false;
 
     function handleSelection() {
         if (context === null) {
@@ -24,12 +31,12 @@ function MarketSelection({
         }
 
         context.addSelection({
-            selectionId: selectionId,
-            matchId: matchId,
-            matchName: matchName,
-            market: "",
+            selectionId,
+            matchId,
+            matchName,
+            market,
             selection: label,
-            odds: odds
+            odds,
         });
     }
 
@@ -37,13 +44,16 @@ function MarketSelection({
         <button
             type="button"
             onClick={handleSelection}
-            className="flex flex-col gap-3 items-center justify-between rounded-lg border border-[#1d2930] bg-[#101923] px-4 py-3 text-left transition-colors hover:border-[#35d07f] hover:bg-[#13231c]"
+            aria-pressed={isSelected}
+            className={`flex min-w-0 flex-col items-center justify-between gap-3 rounded-lg border px-4 py-3 text-center transition-colors ${
+                isSelected
+                    ? "border-[#35d07f] bg-[#13271e]"
+                    : "border-[#1d2930] bg-[#101923] hover:border-[#35d07f] hover:bg-[#13231c]"
+            }`}
         >
-            <div>
-                <p className="text-sm font-medium text-white">
-                    {label}
-                </p>
-            </div>
+            <span className="text-sm font-medium text-white">
+                {label}
+            </span>
 
             <span className="text-sm font-bold text-[#35d07f]">
                 {odds.toFixed(2)}

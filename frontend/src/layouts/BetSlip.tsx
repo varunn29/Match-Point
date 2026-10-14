@@ -20,7 +20,7 @@ function BetSlip() {
     const potentialPayout = stake * totalOdds;
 
     return (
-        <aside className="w-[320px] shrink-0 border-l border-[#1d2930] bg-[#070d13]">
+        <aside className="w-[320px] shrink-0 border-l border-[#1d2930] bg-[#070d13] overflow-y-auto">
             {/* Header */}
             <div className="flex h-[68px] items-center justify-between border-b border-[#1d2930] px-5">
                 <div>

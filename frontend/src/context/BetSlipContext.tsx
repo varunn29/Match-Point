@@ -1,7 +1,8 @@
+
 import { createContext, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
-type BetSelection = {
+export type BetSelection = {
     selectionId: number;
     matchId: number;
     matchName: string;
@@ -25,18 +26,39 @@ function BetSlipProvider({ children }: { children: ReactNode }) {
     const [selections, setSelections] = useState<BetSelection[]>([]);
     const [stake, setStake] = useState<number>(0);
 
-   function addSelection(selection: BetSelection) {
-    setSelections(function (currentSelections) {
-        const alreadySelected = currentSelections.some(function (currentSelection) {
-            return currentSelection.selectionId === selection.selectionId;
+    function addSelection(selection: BetSelection) {
+        setSelections(function (currentSelections) {
+            const existingSelection = currentSelections.find(
+                function (currentSelection) {
+                    return (
+                        currentSelection.matchId === selection.matchId &&
+                        currentSelection.market === selection.market
+                    );
+                }
+            );
+
+            if (
+                existingSelection &&
+                existingSelection.selectionId === selection.selectionId
+            ) {
+                return currentSelections;
+            }
+
+            if (existingSelection) {
+                return currentSelections.map(function (currentSelection) {
+                    if (
+                        currentSelection.matchId === selection.matchId &&
+                        currentSelection.market === selection.market
+                    ) {
+                        return selection;
+                    }
+
+                    return currentSelection;
+                });
+            }
+
+            return [...currentSelections, selection];
         });
-
-        if (alreadySelected) {
-            return currentSelections;
-        }
-
-        return [...currentSelections, selection];
-    });
     }
 
     function removeSelection(selectionId: number) {
@@ -48,7 +70,16 @@ function BetSlipProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <BetSlipContext.Provider value={{ selections, setSelections, addSelection, removeSelection, stake, setStake }}>
+        <BetSlipContext.Provider
+            value={{
+                selections,
+                setSelections,
+                addSelection,
+                removeSelection,
+                stake,
+                setStake,
+            }}
+        >
             {children}
         </BetSlipContext.Provider>
     );
