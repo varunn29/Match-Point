@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import BetDetails from "./BetDetails";
 import BetMatchInfo from "./BetMatchInfo";
 
@@ -5,6 +7,7 @@ export type BetStatus = "pending" | "won" | "lost";
 
 export type Bet = {
     id: number;
+    matchId: number;
     team1: string;
     team2: string;
     team1Logo: string;
@@ -50,6 +53,8 @@ function getStatusClasses(status: BetStatus) {
 }
 
 function BetCard({ bet }: BetCardProps) {
+    const navigate = useNavigate();
+
     return (
         <article className="rounded-xl border border-[#24384a] bg-[#091521] px-6 py-5">
             {/* Match Information + Status */}
@@ -77,6 +82,7 @@ function BetCard({ bet }: BetCardProps) {
             {/* Divider */}
             <div className="my-4 h-px bg-[#1d2d3c]" />
 
+            {/* Bet Selection */}
             <BetDetails
                 market={bet.market}
                 selection={bet.selection}
@@ -85,6 +91,18 @@ function BetCard({ bet }: BetCardProps) {
                 payout={bet.payout}
                 status={bet.status}
             />
+
+            {/* Footer Action */}
+            <div className="mt-5 flex justify-end">
+                <button
+                    type="button"
+                    onClick={() => navigate(`/matches/${bet.matchId}`)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#294258] bg-[#142b3c] px-4 py-2 text-sm font-medium text-[#b9d2ea] transition-colors hover:bg-[#1b384d]"
+                >
+                    View Match
+                    <ExternalLink size={16} />
+                </button>
+            </div>
         </article>
     );
 }

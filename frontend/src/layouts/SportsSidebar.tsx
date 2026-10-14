@@ -1,12 +1,29 @@
+
 import { Check, Search } from "lucide-react";
 import { useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import FilterContext from "../context/FilterContext";
 
 function SportsSidebar() {
     const context = useContext(FilterContext);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const selectedClass = "bg-[#10251f] text-[#18d89b]";
     const unselectedClass = "text-[#c1cad5] hover:bg-[#0d171f] hover:text-white";
+
+    function applyFilters(sport: string, status: string) {
+        if (context === null) {
+            return;
+        }
+
+        context.setSport(sport);
+        context.setStatus(status);
+
+        if (location.pathname !== "/") {
+            navigate("/");
+        }
+    }
 
     return (
         <aside className="w-[296px] shrink-0 border-r border-[#1d2930] bg-[#070d13] px-6 py-6">
@@ -33,11 +50,9 @@ function SportsSidebar() {
                 <div>
                     {/* All Sports */}
                     <button
+                        type="button"
                         onClick={function () {
-                            if (context !== null) {
-                                context.setSport("all");
-                                context.setStatus("all");
-                            }
+                            applyFilters("all", "all");
                         }}
                         className={`flex h-11 w-full items-center rounded-lg px-3 text-sm font-medium transition-colors ${
                             context?.sport === "all"
@@ -52,19 +67,15 @@ function SportsSidebar() {
                         {context?.sport === "all" ? (
                             <Check size={17} strokeWidth={2.5} />
                         ) : (
-                            <span className="text-xs text-[#718096]">
-                                4
-                            </span>
+                            <span className="text-xs text-[#718096]">4</span>
                         )}
                     </button>
 
                     {/* Cricket */}
                     <button
+                        type="button"
                         onClick={function () {
-                            if (context !== null) {
-                                context.setSport("cricket");
-                                context.setStatus("all");
-                            }
+                            applyFilters("cricket", "all");
                         }}
                         className={`flex h-11 w-full items-center rounded-lg px-3 text-sm font-medium transition-colors ${
                             context?.sport === "cricket"
@@ -79,19 +90,15 @@ function SportsSidebar() {
                         {context?.sport === "cricket" ? (
                             <Check size={17} strokeWidth={2.5} />
                         ) : (
-                            <span className="text-xs text-[#718096]">
-                                2
-                            </span>
+                            <span className="text-xs text-[#718096]">2</span>
                         )}
                     </button>
 
                     {/* Football */}
                     <button
+                        type="button"
                         onClick={function () {
-                            if (context !== null) {
-                                context.setSport("football");
-                                context.setStatus("all");
-                            }
+                            applyFilters("football", "all");
                         }}
                         className={`flex h-11 w-full items-center rounded-lg px-3 text-sm font-medium transition-colors ${
                             context?.sport === "football"
@@ -106,9 +113,7 @@ function SportsSidebar() {
                         {context?.sport === "football" ? (
                             <Check size={17} strokeWidth={2.5} />
                         ) : (
-                            <span className="text-xs text-[#718096]">
-                                2
-                            </span>
+                            <span className="text-xs text-[#718096]">2</span>
                         )}
                     </button>
                 </div>
@@ -123,10 +128,9 @@ function SportsSidebar() {
                 </div>
 
                 <button
+                    type="button"
                     onClick={function () {
-                        if (context !== null) {
-                            context.setStatus("live");
-                        }
+                        applyFilters(context?.sport ?? "all", "live");
                     }}
                     className={`flex h-11 w-full items-center rounded-lg px-3 text-sm font-medium transition-colors ${
                         context?.status === "live"
@@ -134,16 +138,12 @@ function SportsSidebar() {
                             : unselectedClass
                     }`}
                 >
-                    <span className="ml-3 flex-1 text-left">
-                        Live
-                    </span>
+                    <span className="ml-3 flex-1 text-left">Live</span>
 
                     {context?.status === "live" ? (
                         <Check size={17} strokeWidth={2.5} />
                     ) : (
-                        <span className="text-xs text-[#718096]">
-                            1
-                        </span>
+                        <span className="text-xs text-[#718096]">1</span>
                     )}
                 </button>
             </section>
@@ -157,10 +157,9 @@ function SportsSidebar() {
                 </div>
 
                 <button
+                    type="button"
                     onClick={function () {
-                        if (context !== null) {
-                            context.setStatus("upcoming");
-                        }
+                        applyFilters(context?.sport ?? "all", "upcoming");
                     }}
                     className={`flex h-11 w-full items-center rounded-lg px-3 text-sm font-medium transition-colors ${
                         context?.status === "upcoming"
@@ -168,16 +167,12 @@ function SportsSidebar() {
                             : unselectedClass
                     }`}
                 >
-                    <span className="ml-3 flex-1 text-left">
-                        Upcoming
-                    </span>
+                    <span className="ml-3 flex-1 text-left">Upcoming</span>
 
                     {context?.status === "upcoming" ? (
                         <Check size={17} strokeWidth={2.5} />
                     ) : (
-                        <span className="text-xs text-[#718096]">
-                            3
-                        </span>
+                        <span className="text-xs text-[#718096]">3</span>
                     )}
                 </button>
 
