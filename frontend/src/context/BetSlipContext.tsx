@@ -1,4 +1,3 @@
-
 import { createContext, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
@@ -28,18 +27,22 @@ function BetSlipProvider({ children }: { children: ReactNode }) {
 
     function addSelection(selection: BetSelection) {
         setSelections(function (currentSelections) {
+            const normalizedMarket = selection.market.trim().toLowerCase();
+
             const existingSelection = currentSelections.find(
                 function (currentSelection) {
                     return (
                         currentSelection.matchId === selection.matchId &&
-                        currentSelection.market === selection.market
+                        currentSelection.market.trim().toLowerCase() ===
+                            normalizedMarket
                     );
                 }
             );
 
             if (
                 existingSelection &&
-                existingSelection.selectionId === selection.selectionId
+                existingSelection.selectionId === selection.selectionId &&
+                existingSelection.selection === selection.selection
             ) {
                 return currentSelections;
             }
@@ -48,7 +51,8 @@ function BetSlipProvider({ children }: { children: ReactNode }) {
                 return currentSelections.map(function (currentSelection) {
                     if (
                         currentSelection.matchId === selection.matchId &&
-                        currentSelection.market === selection.market
+                        currentSelection.market.trim().toLowerCase() ===
+                            normalizedMarket
                     ) {
                         return selection;
                     }

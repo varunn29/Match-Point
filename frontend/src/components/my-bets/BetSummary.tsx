@@ -1,4 +1,3 @@
-
 import type { Bet } from "./BetCard";
 
 type BetSummaryProps = {
@@ -16,6 +15,10 @@ function BetSummary({ bets }: BetSummaryProps) {
 
     const lostCount = bets.filter(function (bet) {
         return bet.status === "lost";
+    }).length;
+
+    const voidCount = bets.filter(function (bet) {
+        return bet.status === "void";
     }).length;
 
     const summaryCards = [
@@ -43,10 +46,16 @@ function BetSummary({ bets }: BetSummaryProps) {
             description: "Losing bets",
             valueClass: "text-[#ff6570]",
         },
+        {
+            label: "Void",
+            value: voidCount,
+            description: "Cancelled bets",
+            valueClass: "text-[#cbd5e1]",
+        },
     ];
 
     return (
-        <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
             {summaryCards.map(function (card) {
                 return (
                     <div

@@ -1,35 +1,74 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import HeroCarousel from "../components/home/HeroCarousel";
 import MatchList from "../components/home/MatchList";
 import FilterContext from "../context/FilterContext";
-import { liveMatches, upcomingMatches } from "../data/matchesData";
+import type { Match } from "../types/match";
+import API_BASE_URL from "../api/config";
 
 function Home() {
     const context = useContext(FilterContext);
+
+    const [matches, setMatches] = useState<Match[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const sport = context?.sport;
+    const status = context?.status;
+
+    useEffect(function () {
+        async function fetchMatches() {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const queryParams = new URLSearchParams();
+
+                if (sport && sport !== "all") {
+                    queryParams.set("sport", sport);
+                }
+
+                if (status && status !== "all") {
+                    queryParams.set("status", status);
+                }
+
+                const queryString = queryParams.toString();
+
+                const url = queryString
+                    ? `${API_BASE_URL}/api/matches?${queryString}`
+                    : `${API_BASE_URL}/api/matches`;
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error("Could not fetch matches.");
+                }
+
+                const data = await response.json();
+
+                setMatches(data.matches);
+            } catch (error) {
+                console.error("Fetch matches error:", error);
+
+                setError("Could not load matches. Please try again.");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        if (context !== null) {
+            fetchMatches();
+        }
+    }, [sport, status, context]);
 
     if (context === null) {
         return null;
     }
 
-    const allMatches = [...liveMatches, ...upcomingMatches];
-
-    const filteredMatches = allMatches.filter(function (match) {
-        const matchesSport =
-            context.sport === "all" ||
-            match.sport.toLowerCase() === context.sport;
-
-        const matchesStatus =
-            context.status === "all" ||
-            match.status.toLowerCase() === context.status;
-
-        return matchesSport && matchesStatus;
-    });
-
-    const filteredLiveMatches = filteredMatches.filter(function (match) {
+    const liveMatches = matches.filter(function (match) {
         return match.status === "Live";
     });
 
-    const filteredUpcomingMatches = filteredMatches.filter(function (match) {
+    const upcomingMatches = matches.filter(function (match) {
         return match.status === "Upcoming";
     });
 
@@ -38,10 +77,20 @@ function Home() {
             <HeroCarousel />
 
             <div className="mt-6">
-                <MatchList
-                    liveMatches={filteredLiveMatches}
-                    upcomingMatches={filteredUpcomingMatches}
-                />
+                {isLoading ? (
+                    <p className="py-12 text-center text-[#8c9aaa]">
+                        Loading matches...
+                    </p>
+                ) : error ? (
+                    <p className="py-12 text-center text-red-400">
+                        {error}
+                    </p>
+                ) : (
+                    <MatchList
+                        liveMatches={liveMatches}
+                        upcomingMatches={upcomingMatches}
+                    />
+                )}
             </div>
         </div>
     );

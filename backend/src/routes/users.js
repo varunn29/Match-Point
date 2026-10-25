@@ -1,11 +1,17 @@
 import express from "express";
-import {getUsers, createUser, getUserBalance, getUserTransactions} from "../controllers/usersController.js";
+import {
+    registerUser,
+    loginUser,
+    getCurrentUser,
+    logoutUser
+} from "../controllers/usersController.js";
+import requireAuth from "../middleware/requireAuth.js";
 
-const usersRouter = express.Router();
+const userRouter = express.Router();
 
-usersRouter.get("/", getUsers);
-usersRouter.post("/", createUser);
-usersRouter.get("/:id/balance", getUserBalance);
-usersRouter.get("/:id/transactions", getUserTransactions);
+userRouter.post("/register", registerUser);
+userRouter.post("/login", loginUser);
+userRouter.get("/me", requireAuth, getCurrentUser);
+userRouter.post("/logout", logoutUser);
 
-export default usersRouter;
+export default userRouter;

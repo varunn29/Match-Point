@@ -1,4 +1,3 @@
-
 import { ArrowLeft, CalendarDays, CircleDot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Match } from "../../types/match";
@@ -16,7 +15,7 @@ function MatchHeader({ match }: MatchHeaderProps) {
             <button
                 type="button"
                 onClick={function () {
-                    navigate("/");
+                    navigate("/home");
                 }}
                 className="flex items-center gap-2 text-sm font-medium text-[#c1cad5] transition-colors hover:text-white"
             >

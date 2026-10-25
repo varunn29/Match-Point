@@ -1,5 +1,5 @@
-
-import { Navigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
     CircleDot,
     Goal,
@@ -14,18 +14,100 @@ import MatchHeader from "../components/match-details/MatchHeader";
 import MarketSection from "../components/match-details/MarketSection";
 import MarketSelection from "../components/match-details/MarketSelection";
 import OtherMarkets from "../components/match-details/OtherMarkets";
-import { allMatches } from "../data/matchesData";
+import type { Match } from "../types/match";
+import API_BASE_URL from "../api/config";
 
 function MatchDetails() {
     const { matchId: matchIdParam } = useParams();
     const matchId = Number(matchIdParam);
 
-    const match = allMatches.find(function (item) {
-        return item.id === matchId;
-    });
+    const [match, setMatch] = useState<Match | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    if (!match) {
-        return <Navigate to="/" replace />;
+    useEffect(function () {
+        let isActive = true;
+
+        async function fetchMatch() {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const response = await fetch(
+                    `${API_BASE_URL}/api/matches`
+                );
+
+                if (!response.ok) {
+                    throw new Error("Could not fetch matches.");
+                }
+
+                const data: { matches: Match[] } = await response.json();
+
+                const selectedMatch = data.matches.find(function (item) {
+                    return item.id === matchId;
+                });
+
+                if (!selectedMatch) {
+                    throw new Error("Match not found.");
+                }
+
+                if (isActive) {
+                    setMatch(selectedMatch);
+                }
+            } catch (error) {
+                console.error("Fetch match details error:", error);
+
+                if (isActive) {
+                    setError(
+                        error instanceof Error
+                            ? error.message
+                            : "Could not load match details."
+                    );
+                }
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
+            }
+        }
+
+        if (Number.isInteger(matchId) && matchId > 0) {
+            fetchMatch();
+        } else {
+            setError("Invalid match ID.");
+            setIsLoading(false);
+        }
+
+        return function () {
+            isActive = false;
+        };
+    }, [matchId]);
+
+    if (isLoading) {
+        return (
+            <div className="px-6 py-12 text-center text-[#8c9aaa]">
+                Loading match details...
+            </div>
+        );
+    }
+
+    if (error || !match) {
+        return (
+            <div className="px-6 py-12 text-center">
+                <p className="text-red-400">
+                    {error || "Could not find this match."}
+                </p>
+                <button
+                    type="button"
+                    onClick={function () {
+                        window.location.href = "/home";
+                    }}
+                    className="mt-4 rounded-md border border-[#263340] px-4 py-2 text-sm text-white hover:bg-[#101a25]"
+                >
+                    Back to Home
+                </button>
+            </div>
+        );
     }
 
     const matchName = `${match.team1} vs ${match.team2}`;
@@ -36,7 +118,6 @@ function MatchDetails() {
             <MatchHeader match={match} />
 
             <div className="mt-4 space-y-3">
-                {/* Match Winner */}
                 <MarketSection
                     matchId={match.id}
                     matchName={matchName}
@@ -73,7 +154,6 @@ function MatchDetails() {
                     />
                 </MarketSection>
 
-                {/* Football Markets */}
                 {isFootball && (
                     <>
                         <MarketSection
@@ -157,7 +237,6 @@ function MatchDetails() {
                     </>
                 )}
 
-                {/* Cricket Markets */}
                 {!isFootball && (
                     <>
                         <MarketSection

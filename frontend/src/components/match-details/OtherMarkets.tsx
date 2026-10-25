@@ -1,4 +1,3 @@
-
 import {
     Goal,
     Target,
@@ -8,6 +7,13 @@ import {
 } from "lucide-react";
 import MarketSection from "./MarketSection";
 import MarketSelection from "./MarketSelection";
+
+export type MarketCategory =
+    | "Goals"
+    | "Halves"
+    | "Corners"
+    | "Cards"
+    | "Specials";
 
 type OtherMarketsProps = {
     matchId: number;

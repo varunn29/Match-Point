@@ -1,13 +1,69 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import type { FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import API_BASE_URL from "../api/config";
 
 function Login() {
-    const [showPassword, setShowPassword] = useState(false);
+    const authContext = useContext(AuthContext);
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (authContext === null) {
+        throw new Error("Login must be used inside AuthProvider.");
+    }
+
+    const { setUser } = authContext;
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const navigate = useNavigate();
+
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+
+        setError("");
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/api/users/login`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        password: password
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || "Could not log in.");
+                return;
+            }
+
+            console.log("Login successful:", data.user);
+
+            setUser(data.user);
+            navigate("/home");
+        } catch (error) {
+            console.error("Login error:", error);
+
+            setError(
+                "Could not connect to the server. Please try again."
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -16,7 +72,7 @@ function Login() {
             <div
                 className="fixed inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
-                    backgroundImage: "url('landing-page-background.png')",
+                    backgroundImage: "url('landing-page-background.png')"
                 }}
             />
 
@@ -74,6 +130,10 @@ function Login() {
                                 type="email"
                                 placeholder="Enter your email"
                                 autoComplete="email"
+                                value={email}
+                                onChange={function (event) {
+                                    setEmail(event.target.value);
+                                }}
                                 required
                                 className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
                             />
@@ -91,10 +151,12 @@ function Login() {
 
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        alert("Password recovery is not set up yet.")
-                                    }
-                                    className="text-xs font-medium text-[#35d07f] transition-colors duration-200 hover:text-white hover:underline"
+                                    onClick={function () {
+                                        alert(
+                                            "Password recovery is not set up yet."
+                                        );
+                                    }}
+                                    className="text-xs font-medium text-[#35d07f] transition-colors duration-200 hover:text-white"
                                 >
                                     Forgot password?
                                 </button>
@@ -107,15 +169,19 @@ function Login() {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter your password"
                                     autoComplete="current-password"
+                                    value={password}
+                                    onChange={function (event) {
+                                        setPassword(event.target.value);
+                                    }}
                                     required
                                     className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 pr-12 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
                                 />
 
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setShowPassword(!showPassword)
-                                    }
+                                    onClick={function () {
+                                        setShowPassword(!showPassword);
+                                    }}
                                     aria-label={
                                         showPassword
                                             ? "Hide password"
@@ -135,11 +201,18 @@ function Login() {
                         {/* Login Button */}
                         <button
                             type="submit"
-                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#35d07f] px-5 py-3 font-bold text-[#07130d] transition-colors duration-200 hover:bg-[#2cbd70]"
+                            disabled={isSubmitting}
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#35d07f] px-5 py-3 font-bold text-[#07130d] transition-colors duration-200 hover:bg-[#2cbd70] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            Log In
+                            {isSubmitting ? "Logging In..." : "Log In"}
                             <ArrowRight size={19} />
                         </button>
+
+                        {error && (
+                            <p role="alert" className="text-sm text-red-400">
+                                {error}
+                            </p>
+                        )}
                     </form>
 
                     {/* Sign Up Link */}

@@ -1,8 +1,10 @@
-
-import { Check, Search } from "lucide-react";
+import { Check } from "lucide-react";
 import { useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterContext from "../context/FilterContext";
+
+type SportFilter = "all" | "cricket" | "football";
+type StatusFilter = "all" | "live" | "upcoming";
 
 function SportsSidebar() {
     const context = useContext(FilterContext);
@@ -10,9 +12,10 @@ function SportsSidebar() {
     const location = useLocation();
 
     const selectedClass = "bg-[#10251f] text-[#18d89b]";
-    const unselectedClass = "text-[#c1cad5] hover:bg-[#0d171f] hover:text-white";
+    const unselectedClass =
+        "text-[#c1cad5] hover:bg-[#0d171f] hover:text-white";
 
-    function applyFilters(sport: string, status: string) {
+    function applyFilters(sport: SportFilter, status: StatusFilter) {
         if (context === null) {
             return;
         }
@@ -20,27 +23,13 @@ function SportsSidebar() {
         context.setSport(sport);
         context.setStatus(status);
 
-        if (location.pathname !== "/") {
-            navigate("/");
+        if (location.pathname !== "/home") {
+            navigate("/home");
         }
     }
 
     return (
         <aside className="w-[296px] shrink-0 border-r border-[#1d2930] bg-[#070d13] px-6 py-6">
-            {/* Search */}
-            <div className="relative mb-6">
-                <Search
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#718096]"
-                    size={17}
-                    strokeWidth={2}
-                />
-                <input
-                    type="text"
-                    placeholder="Search sports, teams, leagues..."
-                    className="h-10 w-full rounded-full border border-[#1d2930] bg-[#0b131c] pl-11 pr-4 text-white outline-none placeholder:text-[#718096] focus:border-[#18d89b]"
-                />
-            </div>
-
             {/* Sports */}
             <section>
                 <p className="mb-3 px-1 text-xs font-medium uppercase tracking-wide text-[#8c9aaa]">
@@ -177,7 +166,7 @@ function SportsSidebar() {
                 </button>
 
                 {/* Promotional Banner */}
-                <div className="mt-5 overflow-hidden rounded-xl border border-[#1d2930]">
+                <div className="mt-23 overflow-hidden rounded-xl border border-[#1d2930]">
                     <img
                         src="/match-point-sidebar-icon.png"
                         alt="Bigger Matches. Bigger Thrills."

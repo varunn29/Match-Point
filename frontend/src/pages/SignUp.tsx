@@ -1,14 +1,84 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import API_BASE_URL from "../api/config";
 
 function SignUp() {
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [success, setSuccess] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const navigate = useNavigate();
+
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+
+        setError("");
+        setSuccess("");
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        const formData = {
+            full_name: fullName.trim(),
+            username: username,
+            email: email.trim(),
+            password: password
+        };
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/api/users/register`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || "Could not create your account.");
+                return;
+            }
+
+            setSuccess(data.message || "Account created successfully.");
+
+            setFullName("");
+            setUsername("");
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
+
+            navigate("/home");
+        } catch (error) {
+            console.error("Registration error:", error);
+
+            setError(
+                "Could not connect to the server. Please try again."
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    function handleUsernameChange(value: string) {
+        setUsername(value.toLowerCase());
     }
 
     return (
@@ -69,9 +139,42 @@ function SignUp() {
                                 type="text"
                                 placeholder="Enter your full name"
                                 autoComplete="name"
+                                value={fullName}
+                                onChange={(event) => setFullName(event.target.value)}
                                 required
                                 className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
                             />
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="username"
+                                className="mb-2 block text-sm font-medium text-slate-200"
+                            >
+                                Username
+                            </label>
+
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                placeholder="Choose a username"
+                                autoComplete="username"
+                                value={username}
+                                onChange={(event) =>
+                                    handleUsernameChange(event.target.value)
+                                }
+                                required
+                                minLength={3}
+                                maxLength={20}
+                                pattern="[a-z0-9_]+"
+                                title="Use 3–20 lowercase letters, numbers, or underscores."
+                                className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
+                            />
+
+                            <p className="mt-2 text-xs text-slate-500">
+                                Use 3–20 lowercase letters, numbers, or underscores.
+                            </p>
                         </div>
 
                         <div>
@@ -88,6 +191,8 @@ function SignUp() {
                                 type="email"
                                 placeholder="Enter your email"
                                 autoComplete="email"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
                                 required
                                 className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
                             />
@@ -108,6 +213,10 @@ function SignUp() {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Create a password"
                                     autoComplete="new-password"
+                                    value={password}
+                                    onChange={(event) =>
+                                        setPassword(event.target.value)
+                                    }
                                     required
                                     minLength={8}
                                     className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 pr-12 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
@@ -153,6 +262,10 @@ function SignUp() {
                                     }
                                     placeholder="Confirm your password"
                                     autoComplete="new-password"
+                                    value={confirmPassword}
+                                    onChange={(event) =>
+                                        setConfirmPassword(event.target.value)
+                                    }
                                     required
                                     minLength={8}
                                     className="w-full rounded-lg border border-white/10 bg-[#020812]/80 px-4 py-3 pr-12 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#35d07f]"
@@ -181,11 +294,30 @@ function SignUp() {
                             </div>
                         </div>
 
+                        {error && (
+                            <p
+                                role="alert"
+                                className="text-sm text-red-400"
+                            >
+                                {error}
+                            </p>
+                        )}
+
+                        {success && (
+                            <p
+                                role="status"
+                                className="text-sm text-[#35d07f]"
+                            >
+                                {success}
+                            </p>
+                        )}
+
                         <button
                             type="submit"
-                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#35d07f] px-5 py-3 font-bold text-[#07130d] transition-colors duration-200 hover:bg-[#2cbd70]"
+                            disabled={isSubmitting}
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#35d07f] px-5 py-3 font-bold text-[#07130d] transition-colors duration-200 hover:bg-[#2cbd70] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            Create Account
+                            {isSubmitting ? "Creating Account..." : "Create Account"}
                             <ArrowRight size={19} />
                         </button>
                     </form>

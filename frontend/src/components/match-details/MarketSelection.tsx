@@ -22,7 +22,12 @@ function MarketSelection({
 
     const isSelected =
         context?.selections.some(function (selection) {
-            return selection.selectionId === selectionId;
+            return (
+                selection.matchId === matchId &&
+                selection.market.trim().toLowerCase() ===
+                    market.trim().toLowerCase() &&
+                selection.selection === label
+            );
         }) ?? false;
 
     function handleSelection() {

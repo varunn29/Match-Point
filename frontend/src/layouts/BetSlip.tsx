@@ -1,15 +1,21 @@
-import { useContext } from "react";
+import { useContext, useRef, useState } from "react";
 import { FileText, X } from "lucide-react";
 import BetSlipContext from "../context/BetSlipContext";
+import API_BASE_URL from "../api/config";
 
 function BetSlip() {
     const context = useContext(BetSlipContext);
+    const [isPlacingBet, setIsPlacingBet] = useState(false);
+    const [message, setMessage] = useState("");
+    const placementInProgress = useRef(false);
 
     if (context === null) {
         return null;
     }
 
     const selections = context.selections;
+    const setSelections = context.setSelections;
+    const removeSelection = context.removeSelection;
     const stake = context.stake;
     const setStake = context.setStake;
 
@@ -19,9 +25,72 @@ function BetSlip() {
 
     const potentialPayout = stake * totalOdds;
 
+    async function handlePlaceBet() {
+        if (placementInProgress.current) {
+            return;
+        }
+
+        if (selections.length === 0) {
+            setMessage("Add at least one selection.");
+            return;
+        }
+
+        if (!Number.isFinite(stake) || stake <= 0) {
+            setMessage("Enter a valid stake greater than zero.");
+            return;
+        }
+
+        placementInProgress.current = true;
+        setIsPlacingBet(true);
+        setMessage("");
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/bets`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    stake: stake,
+                    selections: selections,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setMessage(data.message || "Unable to place bet.");
+                return;
+            }
+
+            setMessage("Bet placed successfully.");
+
+            // Notify the navbar to fetch the updated wallet balance.
+            window.dispatchEvent(new Event("wallet-updated"));
+
+            setSelections([]);
+            setStake(0);
+        } catch {
+            setMessage("Could not connect to the server.");
+        } finally {
+            placementInProgress.current = false;
+            setIsPlacingBet(false);
+        }
+    }
+
+    function handleClearBetSlip() {
+        if (placementInProgress.current) {
+            return;
+        }
+
+        setSelections([]);
+        setStake(0);
+        setMessage("");
+    }
+
     return (
-        <aside className="w-[320px] shrink-0 border-l border-[#1d2930] bg-[#070d13] overflow-y-auto">
-            {/* Header */}
+        <aside className="w-[320px] shrink-0 overflow-y-auto border-l border-[#1d2930] bg-[#070d13]">
             <div className="flex h-[68px] items-center justify-between border-b border-[#1d2930] px-5">
                 <div>
                     <h2 className="text-base font-bold text-white">
@@ -35,17 +104,14 @@ function BetSlip() {
 
                 <button
                     type="button"
-                    onClick={function () {
-                        context.setSelections([]);
-                        setStake(0);
-                    }}
-                    className="text-xs font-medium text-[#718096] transition-colors hover:text-white"
+                    onClick={handleClearBetSlip}
+                    disabled={isPlacingBet}
+                    className="text-xs font-medium text-[#718096] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     Clear
                 </button>
             </div>
 
-            {/* Selections */}
             {selections.length === 0 ? (
                 <div className="flex min-h-[300px] flex-col items-center justify-center px-8 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0d171f]">
@@ -97,11 +163,16 @@ function BetSlip() {
                                     <button
                                         type="button"
                                         onClick={function () {
-                                            context.removeSelection(
-                                                selection.selectionId
-                                            );
+                                            if (
+                                                !placementInProgress.current
+                                            ) {
+                                                removeSelection(
+                                                    selection.selectionId
+                                                );
+                                            }
                                         }}
-                                        className="shrink-0 text-[#718096] transition-colors hover:text-white"
+                                        disabled={isPlacingBet}
+                                        className="shrink-0 text-[#718096] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                                         aria-label={`Remove ${selection.selection}`}
                                     >
                                         <X size={16} />
@@ -113,7 +184,6 @@ function BetSlip() {
                 </div>
             )}
 
-            {/* Bottom */}
             <div className="border-t border-[#1d2930] p-5">
                 <div>
                     <label
@@ -132,11 +202,13 @@ function BetSlip() {
                             id="stake"
                             type="number"
                             min="0"
+                            step="any"
                             value={stake}
+                            disabled={isPlacingBet}
                             onChange={function (event) {
                                 setStake(Number(event.target.value));
                             }}
-                            className="h-11 w-full bg-transparent pr-3 text-sm font-semibold text-white outline-none"
+                            className="h-11 w-full bg-transparent pr-3 text-sm font-semibold text-white outline-none disabled:opacity-50"
                             placeholder="Enter stake"
                         />
                     </div>
@@ -162,12 +234,35 @@ function BetSlip() {
                     </span>
                 </div>
 
+                {message && (
+                    <p
+                        role="status"
+                        aria-live="polite"
+                        className="mt-3 text-xs text-[#8c9aaa]"
+                    >
+                        {message}
+                    </p>
+                )}
+
                 <button
                     type="button"
-                    disabled={selections.length === 0}
-                    className="mt-4 h-11 w-full rounded-lg bg-[#1a2922] text-sm font-semibold text-[#50685b]"
+                    onClick={handlePlaceBet}
+                    disabled={
+                        selections.length === 0 ||
+                        !Number.isFinite(stake) ||
+                        stake <= 0 ||
+                        isPlacingBet
+                    }
+                    className={`mt-4 h-11 w-full rounded-lg text-sm font-semibold transition-colors ${
+                        selections.length > 0 &&
+                        Number.isFinite(stake) &&
+                        stake > 0 &&
+                        !isPlacingBet
+                            ? "bg-[#35d07f] text-[#07110b] hover:bg-[#2cbd70]"
+                            : "cursor-not-allowed bg-[#1a2922] text-[#50685b]"
+                    }`}
                 >
-                    Place Bet
+                    {isPlacingBet ? "Placing Bet..." : "Place Bet"}
                 </button>
             </div>
         </aside>
